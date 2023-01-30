@@ -7,7 +7,7 @@ class TrackingsController < ApplicationController
       "referrer" => request.referrer,  
       "operating_system" => get_operating_system(request.env['HTTP_USER_AGENT']),
       "device" => get_device_type(request.env['HTTP_USER_AGENT']),
-      "language" => request.env['HTTP_ACCEPT_LANGUAGE'],
+      "language" => get_language(request.env['HTTP_ACCEPT_LANGUAGE']),
       # "test" => request.env['HTTP_USER_AGENT']
     }
     # render json: @data
@@ -21,7 +21,7 @@ class TrackingsController < ApplicationController
       device: @data["device"],
       language: @data["language"]
     )
-    render json: Tracking.all
+    # render json: Tracking.all
 
     redirect_to request.query_string, allow_other_host: true
   end
@@ -70,6 +70,24 @@ class TrackingsController < ApplicationController
       end
     end
 
+  def get_language(accept_language)
+    language = accept_language.split(",")
+    language = language.map { |l| l.strip.split(";") }
+    language = language.map { |l|
+      if (l.size == 2)
+        # quality present
+        [ l[0].split("-")[0].downcase, l[1].sub(/^q=/, "").to_f ]
+      else
+        # no quality specified =&gt; quality == 1
+        [ l[0].split("-")[0].downcase, 1.0 ]
+      end
+    }
+    
+    # sort by quality
+    language.sort { |l1, l2| l1[1] <=> l2[1] }
+    
+    return language.to_s
+  end
 =begin
   # before_action :set_tracking, only: %i[ show update destroy ]
 
