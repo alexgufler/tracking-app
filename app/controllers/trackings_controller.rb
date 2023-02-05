@@ -34,7 +34,7 @@ class TrackingsController < ApplicationController
 
       location = HTTParty.get(url)
 
-      if (location["status"]) == "success"
+      if (location["status"] == "success")
         return location["country"]
       else 
         return location["status"]
